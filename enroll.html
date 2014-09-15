@@ -1,0 +1,67 @@
+<html>
+<head>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/script.js"></script>
+<script type="text/javascript">
+  $(document).ready(function(){
+    var demographics;
+    getDemographics(function(dems){
+      demographics = dems;
+      $.each(dems, function(i, dem){
+        $("#dems").
+        append("<option id='dem" + dem.id + "' value='" + dem.id + "'>" + dem.name + "</option>")
+      })
+    })
+
+    $("#add").click(function(){
+      active = $("#dems option:selected")
+      active.remove();
+      id = active.attr('id').substring(3)
+      dem = demographics[id]
+      $("#fields").append(dem.name + ": <input type='text' class='dem-field' id='" + dem.id + "'></input><br/>")
+    })
+
+    $("#submit").click(function(){
+      id = makeId()
+      query = "INSERT INTO survey (id, first_name, last_name, cellphone)  VALUES ('" + id + "', '" + 
+        $("#fname").val() + "', '" + 
+        $("#lname").val() + "', '" + 
+        $("#cell").val() + "')";
+      doUpdate(query, function(data){
+        if (data != "0"){
+          console.log(data)
+        }
+        else {
+          query = "INSERT INTO demographic_values (survey_id, demographic_id, value) VALUES "
+            $.each($(".dem-field"), function (i, dem){
+              query = query + "(" + id + "," + $(dem).attr('id') + ",'" + dem.value + "'), "
+            });
+            doUpdate(query.substring(0,query.length-2), function (data){
+              if(data != "0"){
+                console.log(data)
+              }
+              else{
+                location.reload();
+              }
+            })
+        }
+      })
+    })
+  })
+
+</script>
+</head>
+<body>
+Enroll
+
+<form>
+  First Name: <input type="text" id="fname"><br />
+  Last Name: <input type="text" id="lname"><br />
+  Cellphone: <input type="text" id="cell"><br />
+  <div id="fields"></div>
+  Demographic: <select id='dems'></select>
+  <button type="button" id="add">Add Demographic</button>
+  <button type="button" id="submit">Submit</button>
+</form>
+
+</body>

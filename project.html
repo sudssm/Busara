@@ -1,0 +1,49 @@
+<html>
+<head>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/script.js"></script>
+<script type="text/javascript">
+  $(document).ready(function(){
+    getProjects(function(proj){
+      projects = proj;
+      $.each(proj, function(i, p){
+        if (p.notes == null)
+          p.notes = ""
+        $("#projects").
+        append("<a href='project.php?id=" + p.id + "'>" + p.name + " " + p.notes + "</a><br/>");
+      })
+    })
+
+    $("#submit").click(function(){
+      if ($("#name").val().trim() == "")
+        return;
+      id = makeId()
+      query = "INSERT INTO project (id, name, notes)  VALUES ('" + id + "', '" + 
+        $("#name").val() + "', '" + 
+        $("#notes").val() + "')";
+      doUpdate(query, function(data){
+        if (isNaN(parseInt(data))){
+          console.log(data)
+        }
+        else {
+          location.reload();
+        }
+      })
+    })
+  })
+
+</script>
+</head>
+<body>
+Projects
+<p></p>
+<div id="projects"></div>
+<p></p>
+Add new project
+<form>
+  Name: <input type="text" id="name"><br />
+  Notes: <textarea rows='4' cols='50' id="notes"></textarea><br />
+  <button type="button" id="submit">Submit</button>
+</form>
+
+</body>
