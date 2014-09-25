@@ -73,7 +73,7 @@ function getSurveysBySession (sessionId, callback){
         count -= 1;
         s["dems"]={}
         $.each(dems, function(i, d){
-          if (d.name in s)
+          if (d.name in s.dems)
             s.dems[d.name].push(d);
           else
             s.dems[d.name] = [d]

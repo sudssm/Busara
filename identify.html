@@ -133,7 +133,7 @@ function displayRow(s){
 function detail(id){
   currId = id
   s = surveys[id]
-  $("#sid").val(s.survey_id);
+  $("#sid").html(s.survey_id);
   $("#fname").val(s.first_name);
   $("#lname").val(s.last_name);
   $("#cell").val(s.cellphone);
@@ -159,7 +159,7 @@ Filter: <input id="filter"><br/>
 </div>
 <p></p>
 <div id="detail">
-Survey ID: <input id="sid"><br/>
+  Survey ID: <span id="sid"></span><br/>
   First Name: <input id="fname"><button onclick="setFname()">Update</button><br/>
   Last Name: <input id="lname"><button onclick="setLname()">Update</button><br/>
   Cell Phone: <input id="cell"><button onclick="setCell()">Update</button><br/>
