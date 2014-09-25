@@ -15,6 +15,7 @@ function timeToDB(time){
 }
 
 function doQuery (query, callback){
+  console.log(query);
   $.post( "http://localhost/query.php", 
     {query: query},
     function( data ) {
@@ -30,6 +31,7 @@ function doQuery (query, callback){
   );
 }
 function doUpdate (query, callback){
+  console.log(query)
   $.post( "http://localhost/update.php", 
     {query: query}, callback
   );
@@ -60,8 +62,32 @@ function getSessions (projectId, callback){
 }
 
 function getSurveysBySession (sessionId, callback){
-  query = "SELECT survey.id as survey_id, first_name, last_name, invited, participated, pay FROM participation, survey WHERE survey_id = survey.id and session_id = " + sessionId
-  doQuery(query, callback)
+  query = "SELECT DISTINCT survey.id as survey_id, first_name, last_name, invited, participated, identified, pay, cellphone FROM participation, survey WHERE survey_id = survey.id and session_id = " + sessionId
+  doQuery(query, function(data){
+    count = 0;
+    if(data.length == 0)
+      callback(data)
+    $.each (data, function (i, s){
+      count += 1;
+      getSurveyInfo(s.survey_id, function(dems){
+        count -= 1;
+        s["dems"]={}
+        $.each(dems, function(i, d){
+          if (d.name in s)
+            s.dems[d.name].push(d);
+          else
+            s.dems[d.name] = [d]
+        })
+        if (count == 0)
+          callback(data);
+      })
+    })
+  })
+}
+
+function getSurveyInfo (surveyId, callback){
+  query = "SELECT demographic.id, demographic.name as name, value, timestamp FROM demographic, demographic_values WHERE demographic.id = demographic_id AND survey_id = " + surveyId + " ORDER BY TIMESTAMP"
+  doQuery(query, callback);
 }
 
 function getSurveys (callback){
@@ -69,4 +95,16 @@ function getSurveys (callback){
     data = $.map(data, function(x){return x.id})
     callback(data);
   })
+}
+
+function setParticipationProperty(survey_id, session_id, property, value){
+  doUpdate("UPDATE participation SET " + property + "=" + value + " WHERE survey_id=" + survey_id + " AND session_id=" + session_id)
+}
+
+function setSurveyProperty(survey_id, property, value){
+  doUpdate("UPDATE survey SET " + property + "='" + value + "' WHERE id=" + survey_id)
+}
+
+function addDem (survey_id, demographic_id, value){
+  doUpdate("INSERT INTO demographic_values (survey_id, demographic_id, value) VALUES (" + survey_id + "," + demographic_id + ",'" + value + "')")
 }

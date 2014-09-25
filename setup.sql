@@ -76,4 +76,4 @@ CREATE TABLE participation (
 );
 
 #Testdata
-INSERT INTO participation (survey_id, session_id) VALUES (123456, 1);
+INSERT INTO participation (survey_id, session_id, invited) VALUES (123456, 1, 1);

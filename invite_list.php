@@ -33,6 +33,7 @@
     })
 
     $("#submit").click(function(){
+      session_id = $("#sessions").val()
       num = parseInt($("#count").val())
       if (isNaN(num))
         return
@@ -42,12 +43,10 @@
           var index = Math.floor(Math.random()*surveys.length)
           selections.push(surveys.splice(index)[0]);
         }
-        console.log(selections)
         var query = "INSERT INTO participation (survey_id, session_id, invited) VALUES "
         $.each(selections, function(i,s){
           query = query + "(" + s + "," + session_id + ",1), "
         })
-        console.log(query)
         doUpdate(query.substring(0,query.length-2), function (data){
           if(isNaN(data)){
             console.log(data)
