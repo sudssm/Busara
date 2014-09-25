@@ -1,0 +1,168 @@
+<html>
+<head>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/datetimepicker.js"></script>
+
+<script type="text/javascript">
+  var surveys = {};
+  var currId;
+  $(document).ready(function(){
+    getProjects(function(proj){
+      $.each(proj, function(i, p){
+        $("#projects").append("<option value='" + p.id + "'>" + p.name + "</option>");
+      })
+    })
+
+    $("#projects").change(function() {
+      $("#sessions").empty();
+      $("#sessions").append("<option></option>");
+      getSessions($(this).val(), function(data){
+        $.each(data, function(i, s){
+          $("#sessions").append("<option value='" + s.id + "'>" + s.timestamp + "</option>");
+        })
+      })
+    })
+
+    $("#sessions").change(function(){
+      getSurveysBySession($(this).val(), function(data){ 
+        surveys = {}
+        $.each(data, function (i,s){
+          surveys[s.survey_id] = s;
+        })
+        console.log(surveys)
+        display(surveys)
+      })
+    })
+
+    $("#filter").keyup(function(){
+      display(surveys, $(this).val());
+    })
+  })
+
+function setIdentify(cb){
+  val = cb.checked ? 1 : 0
+  setParticipationProperty(currId, $("#sessions").val(), "identified", val)
+}
+function setParticipate(cb){
+  val = cb.checked ? 1 : 0
+  setParticipationProperty(currId, $("#sessions").val(), "participated", val)
+}
+function setInvite(cb){
+  val = cb.checked ? 1 : 0
+  setParticipationProperty(currId, $("#sessions").val(), "invited", val)
+}
+function setPay(tb){
+  val = $(tb).val()
+  setParticipationProperty(currId, "pay", val)
+}
+function setFname(){
+  val = $("#fname").val()
+  setSurveyProperty(currId, "first_name", val)
+}
+function setLname(){
+  val = $("#lname").val()
+  setSurveyProperty(currId, "last_name", val)
+}
+function setCell(){
+  val = $("#cell").val()
+  setSurveyProperty(currId, "cellphone", val)
+}
+function setDem(demId){
+  val = $("#" + currId + demId).val()
+  addDem(currId, demId, val);
+}
+
+
+function display(surveys, filter){
+  $("#surveys").html("<tr>"+
+    "<th>ID</th>" +
+    "<th>Identified</th>" +
+    "<th>Partcipated</th>" +
+    "<th>Invited</th>" +
+    "<th>Payment</th>" +
+    "<th>First Name</th>" +
+    "<th>Last Name</th>" +
+    "<th>Cell Phone</th>" +
+  "</tr>")
+  if (filter == undefined)
+    filters = []
+  else
+    filters = filter.toLowerCase().split(" ")
+  $.each(surveys, function (i, s){
+    if (s.pay == null) s.pay = ""
+
+    var passing = true
+    for (var i = 0; i < filters.length; i++){
+      if (! passes(s, filters[i]))
+        passing = false
+    }
+    if (passing)
+      displayRow(s)
+  })
+}
+function passes (survey, filter){
+  if (filter == "")
+    return true
+  for (var i = 0; i < Object.keys(survey).length; i++){
+    v = survey[i]
+    if (v!=null && v!="1" && v!="0" && v.toLowerCase().indexOf(filter) >= 0)
+      return true
+  }
+  return false;
+}
+
+function dispChecked(val){
+  return val=="1" ? " checked " : " ";
+}
+function displayRow(s){
+  id = s.survey_id
+  $("#surveys").append(
+    "<tr style='cursor:pointer' onclick='detail("+s.survey_id+")'>"+
+      "<td>" + id + "</td>"+
+      "<td><input type='checkbox'" + dispChecked(s.identified) + "onclick='setIdentify("+id+",this)'></td>"+
+      "<td><input type='checkbox'" + dispChecked(s.participated) + "onclick='setParticipate("+id+",this)'></td>"+
+      "<td><input type='checkbox'" + dispChecked(s.invited) + "onclick='setInvite("+id+",this)'></td>"+
+      "<td><input value='" + s.pay + "' onChange='setPay("+id+",this)'></td>"+
+      "<td>" + s.first_name + "</td>"+
+      "<td>" + s.last_name + "</td>"+
+      "<td>" + s.cellphone + "</td>"+
+    "</tr>"
+  )
+}
+function detail(id){
+  currId = id
+  s = surveys[id]
+  $("#sid").val(s.survey_id);
+  $("#fname").val(s.first_name);
+  $("#lname").val(s.last_name);
+  $("#cell").val(s.cellphone);
+  
+  $("#demographics").empty()
+  $.each(s.dems,function (k,v){
+    $("#demographics").append(k + ": <input id='" + currId + v[0].id + "' value='" + v[0].value + "'/>" + 
+      "<button onclick='setDem("+v[0].id+")'>Update</button><br/>")
+  })
+}
+
+</script>
+</head>
+<body>
+Identify<br/>
+Project: <select id="projects"><option></option></select><br/>
+Session: <select id="sessions"></select><br/>
+<p></p>
+Filter: <input id="filter"><br/>
+<p></p>
+<div>
+  <table id="surveys"></table>
+</div>
+<p></p>
+<div id="detail">
+Survey ID: <input id="sid"><br/>
+  First Name: <input id="fname"><button onclick="setFname()">Update</button><br/>
+  Last Name: <input id="lname"><button onclick="setLname()">Update</button><br/>
+  Cell Phone: <input id="cell"><button onclick="setCell()">Update</button><br/>
+  <div id="demographics"></div>
+</div>
+</body>
