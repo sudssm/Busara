@@ -47,7 +47,7 @@
       $.each(surveys, function(i, s){
         if (s.invited==1)
           invited.push(s)
-        if (s.particpated==1)
+        if (s.participated==1)
           participated.push(s)
       })
       if (invited.length == 0){

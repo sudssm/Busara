@@ -40,21 +40,21 @@
     })
   })
 
-function setIdentify(cb){
+function setIdentify(currId, cb){
   val = cb.checked ? 1 : 0
   setParticipationProperty(currId, $("#sessions").val(), "identified", val)
 }
-function setParticipate(cb){
+function setParticipate(currId, cb){
   val = cb.checked ? 1 : 0
   setParticipationProperty(currId, $("#sessions").val(), "participated", val)
 }
-function setInvite(cb){
+function setInvite(currId, cb){
   val = cb.checked ? 1 : 0
   setParticipationProperty(currId, $("#sessions").val(), "invited", val)
 }
-function setPay(tb){
+function setPay(currId, tb){
   val = $(tb).val()
-  setParticipationProperty(currId, "pay", val)
+  setParticipationProperty(currId, $("#sessions").val(), "pay", val)
 }
 function setFname(){
   val = $("#fname").val()
@@ -78,7 +78,7 @@ function display(surveys, filter){
   $("#surveys").html("<tr>"+
     "<th>ID</th>" +
     "<th>Identified</th>" +
-    "<th>Partcipated</th>" +
+    "<th>Participated</th>" +
     "<th>Invited</th>" +
     "<th>Payment</th>" +
     "<th>First Name</th>" +
@@ -131,6 +131,8 @@ function displayRow(s){
   )
 }
 function detail(id){
+  showParticipation(id)
+
   currId = id
   s = surveys[id]
   $("#sid").html(s.survey_id);
@@ -139,12 +141,26 @@ function detail(id){
   $("#cell").val(s.cellphone);
   
   $("#demographics").empty()
+  $("#history").empty()
+
   $.each(s.dems,function (k,v){
-    $("#demographics").append(k + ": <input id='" + currId + v[0].id + "' value='" + v[0].value + "'/>" + 
-      "<button onclick='setDem("+v[0].id+")'>Update</button><br/>")
+    $.each(v, function(i, d){
+      if (i==0)
+        $("#demographics").append(k + ": <input id='" + currId + d.id + "' value='" + d.value + "'/>" + 
+          "<button onclick='setDem("+d.id+")'>Update</button><br/>")
+      else
+        $("#history").append(k + ": " + d.value + " (" + d.timestamp + ")<br/>")
+    })
   })
 }
-
+function showParticipation(id){
+  getParticipation(id, function(data){
+    $("#participation").empty()
+    $.each(data, function (i, d){
+      $("#participation").append("<a href='session.php?id=" + d.session_id + "'>" + d.session_id + "</a><br/>")
+    })
+  })
+}
 </script>
 </head>
 <body>
@@ -165,4 +181,10 @@ Filter: <input id="filter"><br/>
   Cell Phone: <input id="cell"><button onclick="setCell()">Update</button><br/>
   <div id="demographics"></div>
 </div>
+<p></p>
+<p>Demographic History</p>
+<div id="history"></div>
+<p></p>
+<p>Participation History</p>
+<div id="participation"</div>
 </body>

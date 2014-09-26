@@ -86,7 +86,7 @@ function getSurveysBySession (sessionId, callback){
 }
 
 function getSurveyInfo (surveyId, callback){
-  query = "SELECT demographic.id, demographic.name as name, value, timestamp FROM demographic, demographic_values WHERE demographic.id = demographic_id AND survey_id = " + surveyId + " ORDER BY TIMESTAMP"
+  query = "SELECT demographic.id, demographic.name as name, value, timestamp FROM demographic, demographic_values WHERE demographic.id = demographic_id AND survey_id = " + surveyId + " ORDER BY TIMESTAMP DESC"
   doQuery(query, callback);
 }
 
@@ -107,4 +107,13 @@ function setSurveyProperty(survey_id, property, value){
 
 function addDem (survey_id, demographic_id, value){
   doUpdate("INSERT INTO demographic_values (survey_id, demographic_id, value) VALUES (" + survey_id + "," + demographic_id + ",'" + value + "')")
+}
+
+function newDemographic(name, description, callback){
+  console.log("HIHIHI");
+  doQuery("INSERT INTO demographic (name, description) VALUES ('" + name + "','" + description + "')", callback)
+}
+
+function getParticipation(survey_id, callback){
+  doUpdate("SELECT session_id FROM participation WHERE participated=1 AND survey_id=" + survey_id, callback)
 }
