@@ -1,3 +1,4 @@
+copy httpd.conf C:\xampp\apache\conf\httpd.conf
 C:/xampp/xampp_start.exe
 
 :IMPORT
