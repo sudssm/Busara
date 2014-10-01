@@ -85,9 +85,89 @@ function getSurveysBySession (sessionId, callback){
   })
 }
 
+function getAllParticipation (callback){
+  p = {}
+  function getSurveyPay (surveyId, callback){
+    query = "SELECT sum(pay) FROM participation where survey_id = " + surveyId;
+    doQuery(query, function (x){
+      callback(x[0][0], surveyId)
+    })
+  }
+  function getParts (surveyId, callback){
+    query = "SELECT session_id, project_id FROM session, participation WHERE session.id = session_id and participated=1 and survey_id = " + surveyId
+    doQuery(query, function (resp){
+      projects = []
+      sessions = []
+      $.each(resp, function (i, r){
+        projects.push(r.project_id)
+        sessions.push(r.session_id)
+      });
+      callback({projects: projects, sessions: sessions}, surveyId);
+    })
+  }
+  function getInvites (surveyId, callback){
+    query = "SELECT session_id, project_id FROM session, participation WHERE session.id = session_id and invited=1 and survey_id = " + surveyId
+    doQuery(query, function (resp){
+      projects = []
+      sessions = []
+      $.each(resp, function (i, r){
+        projects.push(r.project_id)
+        sessions.push(r.session_id)
+      });
+      callback({projects: projects, sessions: sessions}, surveyId);
+    })
+  }
+  out = 0
+  doQuery("SELECT * FROM survey", function (surveys){
+    $.each(surveys, function (i, s){
+      sid = s.id
+      out += 4
+      p[sid] = s
+      getSurveyPay(sid, function(pay, surveyId){
+        out -= 1
+        p[surveyId]["pay"] = pay
+
+        if (out == 0)
+          callback(p)
+      })
+      getParts (sid, function (part, surveyId){
+        out -=1
+        p[surveyId]["part_projects"] = part.projects
+        p[surveyId]["part_sessions"] = part.sessions
+
+        if (out == 0)
+          callback(p)
+      })
+      getInvites (sid, function (invite, surveyId){
+        out -=1
+        p[surveyId]["invite_projects"] = invite.projects
+        p[surveyId]["invite_sessions"] = invite.sessions
+
+        if (out == 0)
+          callback(p)
+      })
+      getSurveyInfo(sid, function(dems, surveyId){
+        out -= 1;
+        p[surveyId]["dems"]={}
+        $.each(dems, function(i, d){
+          if (d.name in p[surveyId]["dems"])
+            p[surveyId]["dems"][d.name].push(d);
+          else
+            p[surveyId]["dems"][d.name] = [d]
+        })
+        if (out == 0)
+          callback(p);
+      })
+    })
+  })
+}
+
+
 function getSurveyInfo (surveyId, callback){
   query = "SELECT demographic.id, demographic.name as name, value, timestamp FROM demographic, demographic_values WHERE demographic.id = demographic_id AND survey_id = " + surveyId + " ORDER BY TIMESTAMP DESC"
-  doQuery(query, callback);
+  doQuery(query, function (ans){
+    callback(ans, surveyId)
+  });
 }
 
 function getSurveys (callback){
@@ -111,9 +191,9 @@ function addDem (survey_id, demographic_id, value){
 
 function newDemographic(name, description, callback){
   console.log("HIHIHI");
-  doQuery("INSERT INTO demographic (name, description) VALUES ('" + name + "','" + description + "')", callback)
+  doUpdate("INSERT INTO demographic (name, description) VALUES ('" + name + "','" + description + "')", callback)
 }
 
 function getParticipation(survey_id, callback){
-  doUpdate("SELECT session_id FROM participation WHERE participated=1 AND survey_id=" + survey_id, callback)
+  doQuery("SELECT session_id FROM participation WHERE participated=1 AND survey_id=" + survey_id, callback)
 }

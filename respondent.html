@@ -1,0 +1,224 @@
+<html>
+<head>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/script.js"></script>
+<script src="js/datetimepicker.js"></script>
+
+<script type="text/javascript">
+  var surveys;
+  var currId;
+  $(document).ready(function(){
+    getProjects(function(proj){
+      $.each(proj, function(i, p){
+        $("#projects").append("<option value='" + p.id + "'>" + p.name + "</option>");
+        $("#search").removeAttr('disabled')
+        $("#loading").hide()
+      })
+    })
+
+    getAllParticipation(function(p){
+      surveys = p
+    })
+
+    $("#projects").change(function() {
+      $("#sessions").html("<option value=''>Any</option>");
+      getSessions($(this).val(), function(data){
+        $.each(data, function(i, s){
+          $("#sessions").append("<option value='" + s.id + "'>" + s.timestamp + "</option>");
+        })
+      })
+    })
+  })
+
+filters = {}
+fIndex = 0;
+function addFilter(){
+  filters[++fIndex] = [$("#qualifier").val(), $("#projects").val(), $("#sessions").val()]
+  $("#filters").append("<span id='filter" + fIndex + "'>" + $("#qualifier option:selected").text()
+    + " Project " + $("#projects option:selected").text()
+    + ", Session " + $("#sessions option:selected").text() + 
+    " <button onclick='removeFilter(" + fIndex + ")'>X</button><br/></span>")
+}
+function removeFilter(fIndex){
+  $("#filter" + fIndex).remove();
+  delete filters[fIndex]
+  console.log(filters)
+}
+
+function setFname(){
+  val = $("#fname").val()
+  setSurveyProperty(currId, "first_name", val)
+}
+function setLname(){
+  val = $("#lname").val()
+  setSurveyProperty(currId, "last_name", val)
+}
+function setCell(){
+  val = $("#cell").val()
+  setSurveyProperty(currId, "cellphone", val)
+}
+function setDem(demId){
+  val = $("#" + currId + demId).val()
+  addDem(currId, demId, val);
+}
+function passes (row){
+  inv_sess = row.invite_sessions
+  inv_proj = row.invite_projects
+  part_sess = row.part_sessions
+  part_proj = row.part_projects
+  for (var key in filters){
+    filter = filters[key]
+    verb = filter[0]
+    project = filter[1]
+    session = filter[2]
+    console.log(filter)
+    if (verb == "i"){
+      if (session != ""){
+        if (inv_sess.indexOf(""+session) < 0)
+          return false;
+      }
+      else if (project != ""){
+        console.log(inv_proj)
+        console.log(project)
+        if (inv_proj.indexOf(""+project) < 0)
+          return false
+      }
+      else if (inv_proj.length == 0)
+        return false
+    }
+    else if (verb == "ni"){
+      if (session != ""){
+        if (inv_sess.indexOf(""+session) >= 0)
+          return false;
+      }
+      else if (project != ""){
+        if (inv_proj.indexOf(""+project) >= 0)
+          return false
+      }
+      else if (inv_proj.length > 0)
+        return false
+    }
+    else if (verb == "p"){
+      if (session != ""){
+        if (part_sess.indexOf(""+session) < 0)
+          return false;
+      }
+      else if (project != ""){
+        if (part_proj.indexOf(""+project) < 0)
+          return false
+      }
+      else if (part_proj.length == 0)
+        return false
+    }
+    else if (verb == "np"){
+      if (session != ""){
+        if (part_sess.indexOf(""+session) >= 0)
+          return false;
+      }
+      else if (project != ""){
+        if (part_proj.indexOf(""+project) >= 0)
+          return false
+      }
+      else if (part_proj.length > 0)
+        return false
+    }
+  }
+  return true;
+}
+
+function search(){
+  $("#surveys").html("<tr>"+
+    "<th>ID</th>" +
+    "<th>Total Payment</th>" +
+    "<th>First Name</th>" +
+    "<th>Last Name</th>" +
+    "<th>Cell Phone<s/th>" +
+  "</tr>")
+  $.each(surveys, function (i, s){
+    if (s.pay == null) s.pay = 0
+
+    if (passes(s))
+      displayRow(s)
+  })
+}
+
+function displayRow(s){
+  $("#surveys").append(
+    "<tr style='cursor:pointer' onclick='detail("+s.id+")'>"+
+      "<td>" + s.id + "</td>"+
+      "<td>" + s.pay + "</td>" +
+      "<td>" + s.first_name + "</td>"+
+      "<td>" + s.last_name + "</td>"+
+      "<td>" + s.cellphone + "</td>"+
+    "</tr>"
+  )
+}
+function detail(id){
+  showParticipation(id)
+
+  currId = id
+  s = surveys[id]
+  $("#sid").html(s.survey_id);
+  $("#fname").val(s.first_name);
+  $("#lname").val(s.last_name);
+  $("#cell").val(s.cellphone);
+  
+  $("#demographics").empty()
+  $("#history").empty()
+
+  $.each(s.dems,function (k,v){
+    $.each(v, function(i, d){
+      if (i==0)
+        $("#demographics").append(k + ": <input id='" + currId + d.id + "' value='" + d.value + "'/>" + 
+          "<button onclick='setDem("+d.id+")'>Update</button><br/>")
+      else
+        $("#history").append(k + ": " + d.value + " (" + d.timestamp + ")<br/>")
+    })
+  })
+}
+function showParticipation(id){
+  getParticipation(id, function(data){
+    $("#participation").empty()
+    $.each(data, function (i, d){
+      $("#participation").append("<a href='session.php?id=" + d.session_id + "'>" + d.session_id + "</a><br/>")
+    })
+  })
+}
+</script>
+</head>
+<body>
+Respondent List<br/>
+<p></p>
+Filters: <br/>
+<div id="filters"></div>
+<br/>
+<select id="qualifier">
+  <option value="i">Invited to</option>
+  <option value="ni">Not invited to</option>
+  <option value="p">Participated in</option>
+  <option value="np">Not participated in</option>
+</select>
+Project <select id="projects"><option value=''>Any</option></select>, 
+Session <select id="sessions"><option value=''>Any</option></select>
+<button onclick="addFilter()">Add Filter</button><br/>
+<button id="search" disabled onclick="search()">Search</button>
+<span id="loading">Please wait, loading...</span><br/>
+<p></p>
+<div>
+  <table id="surveys"></table>
+</div>
+<p></p>
+<div id="detail">
+  Survey ID: <span id="sid"></span><br/>
+  First Name: <input id="fname"><button onclick="setFname()">Update</button><br/>
+  Last Name: <input id="lname"><button onclick="setLname()">Update</button><br/>
+  Cell Phone: <input id="cell"><button onclick="setCell()">Update</button><br/>
+  <div id="demographics"></div>
+</div>
+<p></p>
+<p>Demographic History</p>
+<div id="history"></div>
+<p></p>
+<p>Participation History</p>
+<div id="participation"</div>
+</body>
