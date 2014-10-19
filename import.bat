@@ -1,2 +1,2 @@
-mysql -uroot busara < %1
+mysql -uroot busara --force < %1
 pause

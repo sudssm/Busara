@@ -27,7 +27,7 @@
       if ($("#time").val().trim() == "")
         return;
       time = timeToDB($("#time").val())
-      query = "INSERT INTO session (project_id, timestamp, notes)  VALUES (" + project_id + ", '" + 
+      query = "INSERT INTO session (id, project_id, timestamp, notes)  VALUES (" + makeId() + "," + project_id + ", '" + 
         time + "', '" + 
         $("#notes").val() + "')";
       console.log(query);

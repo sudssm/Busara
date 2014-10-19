@@ -43,9 +43,9 @@
           var index = Math.floor(Math.random()*surveys.length)
           selections.push(surveys.splice(index)[0]);
         }
-        var query = "INSERT INTO participation (survey_id, session_id, invited) VALUES "
+        var query = "INSERT INTO participation (id, survey_id, session_id, invited) VALUES "
         $.each(selections, function(i,s){
-          query = query + "(" + s + "," + session_id + ",1), "
+          query = query + "(" + makeId() + "," + s + "," + session_id + ",1), "
         })
         doUpdate(query.substring(0,query.length-2), function (data){
           if(isNaN(data)){

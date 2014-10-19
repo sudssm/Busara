@@ -32,8 +32,10 @@
           console.log(data)
         }
         else {
+          var dems = false;
           query = "INSERT INTO demographic_values (survey_id, demographic_id, value) VALUES "
             $.each($(".dem-field"), function (i, dem){
+              dems = true;
               query = query + "(" + id + "," + $(dem).attr('id') + ",'" + dem.value + "'), "
             });
             doUpdate(query.substring(0,query.length-2), function (data){

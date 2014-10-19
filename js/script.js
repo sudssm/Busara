@@ -190,8 +190,7 @@ function addDem (survey_id, demographic_id, value){
 }
 
 function newDemographic(name, description, callback){
-  console.log("HIHIHI");
-  doUpdate("INSERT INTO demographic (name, description) VALUES ('" + name + "','" + description + "')", callback)
+  doUpdate("INSERT INTO demographic (id, name, description) VALUES (" + makeId() + ",'" + name + "','" + description + "')", callback)
 }
 
 function getParticipation(survey_id, callback){
