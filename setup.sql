@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS demographic_values (
   survey_id INT NOT NULL,
   demographic_id INT NOT NULL,
   value VARCHAR(255) NOT NULL,
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (survey_id) REFERENCES survey(id),
   FOREIGN KEY (demographic_id) REFERENCES demographic(id)
 );
